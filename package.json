@@ -21,6 +21,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
     "express": "^4.21.2",
+    "sinon": "^19.0.4",
     "winston": "^3.17.0"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@types/express": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.13.11",
+    "@types/sinon": "^17.0.4",
     "chai": "^4.5.0",
     "chai-http": "^4.4.0",
     "drizzle-kit": "^0.30.5",

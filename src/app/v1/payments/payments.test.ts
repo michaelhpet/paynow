@@ -1,7 +1,9 @@
 import "mocha";
 import chai from "chai";
 import { default as chaiHttp } from "chai-http";
+import sinon from "sinon";
 import app from "../..";
+import * as utils from "../../../utils";
 
 chai.use(chaiHttp);
 const expect = chai.expect;
@@ -123,4 +125,45 @@ describe("GET /payments", () => {
         done();
       });
   });
+});
+
+describe("POST /payments/webhook", () => {
+  let verifySignatureStub: sinon.SinonStub;
+
+  before(() => {
+    verifySignatureStub = sinon.stub(utils, "verifySignature").returns(true);
+  });
+
+  after(() => {
+    verifySignatureStub.restore();
+  });
+
+  it("should return 400 Bad Request when signature is invalid", (done) => {
+    verifySignatureStub.returns(false);
+
+    request(app)
+      .post("/api/v1/payments/webhook")
+      .then((res) => {
+        expect(res).to.have.status(400);
+        done();
+      });
+  });
+
+  it("should return 200 OK when signature is correct", (done) => {
+    verifySignatureStub.returns(true);
+
+    request(app)
+      .post("/api/v1/payments/webhook")
+      .send({
+        data: {
+          reference: "reference",
+          amount: 100,
+          status: "success",
+        },
+      })
+      .then((res) => {
+        expect(res).to.have.status(200);
+        done();
+      });
+  }).timeout(5000);
 });

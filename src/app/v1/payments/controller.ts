@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import crypto from "crypto";
 import { db } from "../../../db";
 import { payments } from "../../../db/schema";
-import { AppError, success } from "../../../utils";
+import { AppError, success, verifySignature } from "../../../utils";
 import { Pagination, Payment, PaystackEvent } from "../../../types";
 import { initPaymentReq } from "./paystack";
 import { eq } from "drizzle-orm";
@@ -117,12 +116,12 @@ export async function webhook(req: Request, res: Response, next: NextFunction) {
   try {
     logger.info("Webhook received...", { body: req.body });
 
-    const hash = crypto
-      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
-      .update(JSON.stringify(req.body))
-      .digest("hex");
+    const signatureValid = verifySignature(
+      req.body,
+      req.headers["x-paystack-signature"] as string
+    );
 
-    if (hash !== req.headers["x-paystack-signature"]) {
+    if (!signatureValid) {
       logger.error("Invalid webhook signature", { headers: req.headers });
       throw new AppError(400, "Invalid webhook signature");
     }
@@ -134,20 +133,17 @@ export async function webhook(req: Request, res: Response, next: NextFunction) {
       .from(payments)
       .where(eq(payments.reference, data.data.reference));
 
-    if (!payment) {
-      logger.error("Payment not found", { reference: data.data.reference });
-      throw new AppError(404, "Payment not found");
+    if (payment) {
+      await db
+        .update(payments)
+        .set({
+          status: data.data.status || payment.status,
+          updated_at: data.data.paid_at || new Date().toISOString(),
+        })
+        .where(eq(payments.reference, data.data.reference));
+
+      logger.info("Payment updated successfully", { data });
     }
-
-    await db
-      .update(payments)
-      .set({
-        status: data.data.status || payment.status,
-        updated_at: data.data.paid_at || new Date().toISOString(),
-      })
-      .where(eq(payments.reference, data.data.reference));
-
-    logger.info("Payment updated successfully", { data });
 
     res.status(200).json({ status: "success", message: "Webhook received" });
   } catch (error) {

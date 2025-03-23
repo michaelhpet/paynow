@@ -1,4 +1,5 @@
 import { Pagination } from "../types";
+import crypto from "crypto";
 
 export function getPagination(
   pagination: Pagination,
@@ -43,4 +44,13 @@ export class AppError extends Error {
     this.code = code;
     this.status = code >= 400 && code < 500 ? "fail" : "error";
   }
+}
+
+export function verifySignature(data: any, signature: string) {
+  const hash = crypto
+    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
+    .update(JSON.stringify(data))
+    .digest("hex");
+
+  return hash === signature;
 }
