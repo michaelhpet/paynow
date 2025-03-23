@@ -4,6 +4,7 @@ import { payments } from "@/db/schema";
 import { AppError, success } from "@/utils";
 import { Pagination, Payment } from "@/types";
 import { initPaymentReq } from "./paystack";
+import { eq } from "drizzle-orm";
 
 export async function getPayments(req: Request, res: Response) {
   const { limit = 10, page = 1 } = req.query as unknown as Pagination;
@@ -52,6 +53,44 @@ export async function initPayment(
           "Payment created successfully"
         )
       );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getPaymentStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+
+    const [data] = await db.select().from(payments).where(eq(payments.id, id));
+
+    if (!data) throw new AppError(404, "Payment not found");
+
+    res.status(200).json(
+      success(
+        {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          amount: data.amount,
+          status: data.status,
+          reference: data.reference,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          ...(data.status !== "completed"
+            ? {
+                access_code: data.access_code,
+                authorization_url: `https://checkout.paystack.com/${data.access_code}`,
+              }
+            : {}),
+        },
+        "Payment retrieved successfully"
+      )
+    );
   } catch (error) {
     next(error);
   }

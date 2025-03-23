@@ -14,3 +14,9 @@ export const validatePOSTPayments = celebrate({
     amount: Joi.number().min(1).required(),
   },
 });
+
+export const validateGETPaymentStatus = celebrate({
+  params: {
+    id: Joi.string().required(),
+  },
+});
