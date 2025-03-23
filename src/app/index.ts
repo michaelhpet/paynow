@@ -5,6 +5,7 @@ import v1Router from "./v1";
 import { AppError } from "../utils";
 import { CelebrateError } from "celebrate";
 import { drizzle } from "drizzle-orm/libsql";
+import logger from "../utils/logger";
 
 const app = express();
 app.use(cors());
@@ -21,7 +22,6 @@ app.use((req, res) => {
 });
 
 app.use((err: AppError, _: Request, res: Response, __: NextFunction) => {
-  console.log("error handling middleware called now...");
   if (err instanceof CelebrateError) {
     const messages: string[] = [];
     err.details.forEach((error) => {
@@ -46,15 +46,15 @@ const PORT = process.env.PORT || 8080;
 async function main() {
   try {
     drizzle(process.env.DB_FILE_NAME!);
-    console.log("Database connected successfully 🚀");
-    app.listen(PORT, () => console.log(`Server started on port ${PORT} 🚀`));
+    logger.info("Database connected successfully 🚀");
+    app.listen(PORT, () => logger.info(`Server started on port ${PORT} 🚀`));
   } catch (error) {
     if (error instanceof Error) {
-      console.log("Failed to start server", error.message);
+      logger.error("Failed to start server", error.message);
     } else {
-      console.log("Failed to start server", error);
+      logger.error("Failed to start server", error);
     }
-    console.log("Retrying in a moment...");
+    logger.info("Retrying in a moment...");
     setTimeout(() => {
       main();
     }, 1000);

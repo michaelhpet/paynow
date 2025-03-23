@@ -6,19 +6,28 @@ import { AppError, success } from "../../../utils";
 import { Pagination, Payment, PaystackEvent } from "../../../types";
 import { initPaymentReq } from "./paystack";
 import { eq } from "drizzle-orm";
+import logger from "../../../utils/logger";
 
-export async function getPayments(req: Request, res: Response) {
-  const { limit = 10, page = 1 } = req.query as unknown as Pagination;
-  const offset = (page - 1) * limit;
+export async function getPayments(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { limit = 10, page = 1 } = req.query as unknown as Pagination;
+    const offset = (page - 1) * limit;
 
-  const data = await db
-    .select()
-    .from(payments)
-    .orderBy(payments.created_at)
-    .limit(limit)
-    .offset(offset);
+    const data = await db
+      .select()
+      .from(payments)
+      .orderBy(payments.created_at)
+      .limit(limit)
+      .offset(offset);
 
-  res.status(200).json(success(data, "Payments retrieved successfully"));
+    res.status(200).json(success(data, "Payments retrieved successfully"));
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function initPayment(
@@ -27,12 +36,16 @@ export async function initPayment(
   next: NextFunction
 ) {
   try {
+    logger.info("Payment initialization started...", { body: req.body });
+
     const { name, email, amount } = req.body as Payment;
 
     const paystackRes = await initPaymentReq({ email, amount });
 
-    if (!paystackRes.status)
+    if (!paystackRes.status) {
+      logger.error("Payment initialization failed", { paystackRes });
       throw new AppError(502, "Payment initialization failed");
+    }
 
     const [data] = await db
       .insert(payments)
@@ -46,6 +59,8 @@ export async function initPayment(
       })
       .returning();
 
+    logger.info("Payment created successfully", { data });
+
     res
       .status(201)
       .json(
@@ -55,6 +70,7 @@ export async function initPayment(
         )
       );
   } catch (error) {
+    logger.error("Payment initialization failed", { error });
     next(error);
   }
 }
@@ -99,13 +115,17 @@ export async function getPaymentStatus(
 
 export async function webhook(req: Request, res: Response, next: NextFunction) {
   try {
+    logger.info("Webhook received...", { body: req.body });
+
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
       .update(JSON.stringify(req.body))
       .digest("hex");
 
-    if (hash !== req.headers["x-paystack-signature"])
+    if (hash !== req.headers["x-paystack-signature"]) {
+      logger.error("Invalid webhook signature", { headers: req.headers });
       throw new AppError(400, "Invalid webhook signature");
+    }
 
     const data: PaystackEvent = req.body;
 
@@ -114,18 +134,24 @@ export async function webhook(req: Request, res: Response, next: NextFunction) {
       .from(payments)
       .where(eq(payments.reference, data.data.reference));
 
-    if (!payment) throw new AppError(404, "Payment not found");
+    if (!payment) {
+      logger.error("Payment not found", { reference: data.data.reference });
+      throw new AppError(404, "Payment not found");
+    }
 
     await db
       .update(payments)
       .set({
         status: data.data.status || payment.status,
-        updated_at: new Date().toISOString(),
+        updated_at: data.data.paid_at || new Date().toISOString(),
       })
       .where(eq(payments.reference, data.data.reference));
 
+    logger.info("Payment updated successfully", { data });
+
     res.status(200).json({ status: "success", message: "Webhook received" });
   } catch (error) {
+    logger.error("Webhook failed", { error });
     next(error);
   }
 }
