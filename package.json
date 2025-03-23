@@ -4,7 +4,7 @@
   "description": "Accept payments with Paynow",
   "main": "dist/app/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/app/index.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +26,7 @@
     "@types/node": "^22.13.11",
     "drizzle-kit": "^0.30.5",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

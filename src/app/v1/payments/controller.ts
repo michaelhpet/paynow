@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { db } from "../../../db";
-import { payments } from "../../../db/schema";
-import { AppError, success } from "../../../utils";
-import { Pagination, Payment } from "../../../types";
+import { db } from "@/db";
+import { payments } from "@/db/schema";
+import { AppError, success } from "@/utils";
+import { Pagination, Payment } from "@/types";
 import { initPaymentReq } from "./paystack";
 
 export async function getPayments(req: Request, res: Response) {
