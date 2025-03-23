@@ -1,9 +1,10 @@
 import express from "express";
-import { validateGETPayments } from "./validation";
-import { getPayments } from "./controller";
+import { validateGETPayments, validatePOSTPayments } from "./validation";
+import { getPayments, initPayment } from "./controller";
 
 const router = express.Router();
 
 router.get("/", validateGETPayments, getPayments);
+router.post("/", validatePOSTPayments, initPayment);
 
 export default router;

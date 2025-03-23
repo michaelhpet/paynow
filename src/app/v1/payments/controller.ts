@@ -17,3 +17,14 @@ export async function getPayments(req: Request, res: Response) {
 
   res.status(200).json(success(data, "Payments retrieved successfully"));
 }
+
+export async function initPayment(req: Request, res: Response) {
+  const { name, email, amount } = req.body;
+
+  const data = await db
+    .insert(payments)
+    .values({ name, email, amount, status: "pending" })
+    .returning();
+
+  res.status(201).json(success(data, "Payment created successfully"));
+}

@@ -6,9 +6,13 @@ export const payments = sqliteTable("payments", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text().notNull(),
-  email: text().notNull().unique(),
+  email: text().notNull(),
   amount: real().notNull(),
   status: text().notNull(),
-  created_at: text().notNull(),
-  updated_at: text().notNull(),
+  created_at: text()
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text()
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
 });
