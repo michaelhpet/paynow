@@ -4,24 +4,41 @@
   "description": "Accept payments with Paynow",
   "main": "dist/app/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/app/index.ts",
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/app/index.js",
+    "migrate": "drizzle-kit migrate",
+    "test": "NODE_ENV=test mocha --exit"
   },
   "keywords": [],
-  "author": "",
+  "author": "Michael Peter",
   "license": "ISC",
-  "packageManager": "pnpm@10.6.5",
   "dependencies": {
+    "@libsql/client": "^0.15.0",
     "celebrate": "^15.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "drizzle-orm": "^0.41.0",
+    "express": "^4.21.2",
+    "sinon": "^19.0.4",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.20",
+    "@types/chai-http": "^4.2.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.13.11",
+    "@types/sinon": "^17.0.4",
+    "chai": "^4.5.0",
+    "chai-http": "^4.4.0",
+    "drizzle-kit": "^0.30.5",
+    "mocha": "^11.1.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
-  }
+  },
+  "packageManager": "yarn@4.1.1"
 }
