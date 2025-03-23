@@ -1,5 +1,5 @@
-import { Payment } from "@/types";
-import { AppError } from "@/utils";
+import { Payment } from "../../../types";
+import { AppError } from "../../../utils";
 
 export async function initPaymentReq(data: Pick<Payment, "email" | "amount">) {
   const res = await fetch("https://api.paystack.co/transaction/initialize", {

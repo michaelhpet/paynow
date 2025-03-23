@@ -2,7 +2,7 @@ import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import v1Router from "./v1";
-import { AppError } from "@/utils";
+import { AppError } from "../utils";
 import { CelebrateError } from "celebrate";
 import { drizzle } from "drizzle-orm/libsql";
 

@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
-import { db } from "@/db";
-import { payments } from "@/db/schema";
-import { AppError, success } from "@/utils";
-import { Pagination, Payment, PaystackEvent } from "@/types";
+import { db } from "../../../db";
+import { payments } from "../../../db/schema";
+import { AppError, success } from "../../../utils";
+import { Pagination, Payment, PaystackEvent } from "../../../types";
 import { initPaymentReq } from "./paystack";
 import { eq } from "drizzle-orm";
 
