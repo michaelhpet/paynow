@@ -4,8 +4,8 @@ CREATE TABLE `payments` (
 	`email` text NOT NULL,
 	`amount` real NOT NULL,
 	`status` text NOT NULL,
+	`reference` text NOT NULL,
+	`access_code` text NOT NULL,
 	`created_at` text NOT NULL,
 	`updated_at` text NOT NULL
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX `payments_email_unique` ON `payments` (`email`);
