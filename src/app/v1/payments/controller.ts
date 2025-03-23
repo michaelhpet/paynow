@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { db } from "@/db";
 import { payments } from "@/db/schema";
 import { AppError, success } from "@/utils";
@@ -19,32 +19,40 @@ export async function getPayments(req: Request, res: Response) {
   res.status(200).json(success(data, "Payments retrieved successfully"));
 }
 
-export async function initPayment(req: Request, res: Response) {
-  const { name, email, amount } = req.body as Payment;
+export async function initPayment(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { name, email, amount } = req.body as Payment;
 
-  const paystackRes = await initPaymentReq({ email, amount });
+    const paystackRes = await initPaymentReq({ email, amount });
 
-  if (!paystackRes.status)
-    throw new AppError(502, "Payment initialization failed");
+    if (!paystackRes.status)
+      throw new AppError(502, "Payment initialization failed");
 
-  const [data] = await db
-    .insert(payments)
-    .values({
-      name,
-      email,
-      amount,
-      status: "pending",
-      reference: paystackRes.data.reference,
-      access_code: paystackRes.data.access_code,
-    })
-    .returning();
+    const [data] = await db
+      .insert(payments)
+      .values({
+        name,
+        email,
+        amount,
+        status: "pending",
+        reference: paystackRes.data.reference,
+        access_code: paystackRes.data.access_code,
+      })
+      .returning();
 
-  res
-    .status(201)
-    .json(
-      success(
-        { ...data, authorization_url: paystackRes.data.authorization_url },
-        "Payment created successfully"
-      )
-    );
+    res
+      .status(201)
+      .json(
+        success(
+          { ...data, authorization_url: paystackRes.data.authorization_url },
+          "Payment created successfully"
+        )
+      );
+  } catch (error) {
+    next(error);
+  }
 }

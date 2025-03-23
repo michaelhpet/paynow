@@ -21,6 +21,7 @@ app.use((req, res) => {
 });
 
 app.use((err: AppError, _: Request, res: Response, __: NextFunction) => {
+  console.log("error handling middleware called now...");
   if (err instanceof CelebrateError) {
     const messages: string[] = [];
     err.details.forEach((error) => {
@@ -49,9 +50,9 @@ async function main() {
     app.listen(PORT, () => console.log(`Server started on port ${PORT} 🚀`));
   } catch (error) {
     if (error instanceof Error) {
-      console.log("Failed to start server", error.message, "\n");
+      console.log("Failed to start server", error.message);
     } else {
-      console.log("Failed to start server", error, "\n");
+      console.log("Failed to start server", error);
     }
     console.log("Retrying in a moment...");
     setTimeout(() => {
