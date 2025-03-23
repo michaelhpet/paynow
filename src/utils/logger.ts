@@ -6,4 +6,8 @@ const logger = winston.createLogger({
   ],
 });
 
+if (process.env.NODE_ENV === "test") {
+  logger.silent = true;
+}
+
 export default logger;
