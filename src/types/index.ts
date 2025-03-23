@@ -14,3 +14,13 @@ export type Payment = {
   created_at: string;
   updated_at: string;
 };
+
+export type PaystackEvent = {
+  event: string;
+  data: {
+    reference: string;
+    amount: number;
+    status: "success" | "failed";
+    paid_at: string;
+  };
+};

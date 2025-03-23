@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
+import crypto from "crypto";
 import { db } from "@/db";
 import { payments } from "@/db/schema";
 import { AppError, success } from "@/utils";
-import { Pagination, Payment } from "@/types";
+import { Pagination, Payment, PaystackEvent } from "@/types";
 import { initPaymentReq } from "./paystack";
 import { eq } from "drizzle-orm";
 
@@ -91,6 +92,39 @@ export async function getPaymentStatus(
         "Payment retrieved successfully"
       )
     );
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function webhook(req: Request, res: Response, next: NextFunction) {
+  try {
+    const hash = crypto
+      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
+
+    if (hash !== req.headers["x-paystack-signature"])
+      throw new AppError(400, "Invalid webhook signature");
+
+    const data: PaystackEvent = req.body;
+
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.reference, data.data.reference));
+
+    if (!payment) throw new AppError(404, "Payment not found");
+
+    await db
+      .update(payments)
+      .set({
+        status: data.data.status || payment.status,
+        updated_at: new Date().toISOString(),
+      })
+      .where(eq(payments.reference, data.data.reference));
+
+    res.status(200).json({ status: "success", message: "Webhook received" });
   } catch (error) {
     next(error);
   }
